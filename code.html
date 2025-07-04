@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question AI - Your Learning Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 20px;
+            padding-bottom: 100px; /* Space for bottom nav */
+        }
+
+        .subject-selector {
+            margin-bottom: 20px;
+        }
+
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .subject-card {
+            background: #f8f9ff;
+            border: 2px solid #e1e8ff;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .subject-card.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .subject-emoji {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .subject-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-tabs {
+            display: flex;
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-content {
+            display: none;
+        }
+
+        .input-content.active {
+            display: block;
+        }
+
+        textarea {
+            width: 100%;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        #image-input textarea {
+            margin-top: 15px;
+            min-height: 60px;
+        }
+
+        .image-upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .image-upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        #imagePreview {
+            position: relative;
+            margin-top: 15px;
+        }
+
+        .uploaded-image {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            line-height: 24px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .ask-button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .ask-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .ask-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .answer-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .answer-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .answer-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+
+        .answer-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .answer-content {
+            line-height: 1.7;
+            white-space: pre-wrap;
+            color: #2c3e50;
+            word-wrap: break-word;
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #d63031;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid #d63031;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .history-section {
+            margin-top: 30px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .history-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .clear-btn {
+            background: #ff7675;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .clear-btn:hover {
+            background: #d63031;
+        }
+
+        .history-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 3px solid #667eea;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .history-item:hover {
+            background-color: #f8f9ff;
+        }
+
+        .history-question {
+            font-weight: 500;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .history-answer {
+            color: #666;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .history-meta {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            padding: 15px 20px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-weight: 600;
+            color: #667eea;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .app-container {
+                box-shadow: none;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🧠 Question AI</h1>
+            <p>Your intelligent learning companion</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Subject Selector -->
+            <div class="subject-selector">
+                <div class="subject-grid">
+                    <div class="subject-card active" data-subject="general">
+                        <span class="subject-emoji">🎯</span><span class="subject-name">General</span>
+                    </div>
+                    <div class="subject-card" data-subject="hindi">
+                        <span class="subject-emoji">📚</span><span class="subject-name">Hindi</span>
+                    </div>
+                    <div class="subject-card" data-subject="english">
+                        <span class="subject-emoji">🔤</span><span class="subject-name">English</span>
+                    </div>
+                    <div class="subject-card" data-subject="mathematics">
+                        <span class="subject-emoji">🔢</span><span class="subject-name">Math</span>
+                    </div>
+                    <div class="subject-card" data-subject="physics">
+                        <span class="subject-emoji">⚡</span><span class="subject-name">Physics</span>
+                    </div>
+                    <div class="subject-card" data-subject="chemistry">
+                        <span class="subject-emoji">🧪</span><span class="subject-name">Chemistry</span>
+                    </div>
+                    <div class="subject-card" data-subject="biology">
+                        <span class="subject-emoji">🌱</span><span class="subject-name">Biology</span>
+                    </div>
+                    <div class="subject-card" data-subject="computer">
+                        <span class="subject-emoji">💻</span><span class="subject-name">Computer</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Section -->
+            <div class="input-section">
+                <div class="input-tabs">
+                    <div class="tab active" data-tab="text">📝 Text</div>
+                    <div class="tab" data-tab="image">📷 Image & Text</div>
+                </div>
+
+                <!-- Text Input -->
+                <div class="input-content active" id="text-input">
+                    <textarea id="question-text" placeholder="Ask your question here...
+
+Examples:
+• What is photosynthesis?
+• Solve: 2x + 5 = 13
+• रामायण का सारांश दें"></textarea>
+                </div>
+
+                <!-- Image Input -->
+                <div class="input-content" id="image-input">
+                    <div class="image-upload-area" onclick="document.getElementById('imageFile').click()">
+                        <div id="imagePreview">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">Tap to upload an image</div>
+                            <div style="font-size: 0.8rem; color: #999;">PNG, JPG, JPEG supported</div>
+                        </div>
+                    </div>
+                    <input type="file" id="imageFile" class="file-input" accept="image/*">
+                    <textarea id="question-image" placeholder="Optional: Ask a question about the image..."></textarea>
+                </div>
+
+                <button class="ask-button" onclick="askQuestion()">
+                    <span id="button-text">🚀 Get Answer</span>
+                </button>
+            </div>
+
+            <!-- Error -->
+            <div class="error" id="error"></div>
+            
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>AI is analyzing... Please wait</p>
+            </div>
+
+            <!-- Answer Section -->
+            <div class="answer-section" id="answerSection">
+                <div class="answer-header">
+                    <span class="answer-icon">💡</span>
+                    <span class="answer-title">AI Answer</span>
+                </div>
+                <div class="answer-content" id="answerContent"></div>
+            </div>
+
+            <!-- History Section -->
+            <div class="history-section">
+                <div class="history-header">
+                    <span class="history-title">📚 Recent Questions</span>
+                    <button class="clear-btn" onclick="clearHistory()">Clear All</button>
+                </div>
+                <div id="historyContainer">
+                     <p style="text-align: center; color: #999; padding: 20px;">No questions yet. Start learning!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-stats">
+                <div class="stat">
+                    <span class="stat-number" id="totalQuestions">0</span>
+                    <span>Questions</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number" id="currentSubject">General</span>
+                    <span>Subject</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">Flash</span>
+                    <span>Model</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WARNING: Storing API keys in client-side code is highly insecure and can lead to abuse.
+        // This is for local testing ONLY. Do not deploy this to a public website.
+        const API_KEY = 'AIzaSyAP9nDoBPFQzu0w_oWITioC0GFj3X5Zpxs';
+        
+        let questionHistory = [];
+        let currentSubject = 'general';
+        let currentTab = 'text';
+        let uploadedImage = null;
+
+        window.onload = function() {
+            loadHistory();
+            setupEventListeners();
+            updateStats();
+        };
+
+        function setupEventListeners() {
+            document.querySelectorAll('.subject-card').forEach(card => card.addEventListener('click', () => selectSubject(card.dataset.subject)));
+            document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+            document.getElementById('imageFile').addEventListener('change', handleImageUpload);
+            
+            const uploadArea = document.querySelector('.image-upload-area');
+            uploadArea.addEventListener('dragover', e => { e.preventDefault(); e.currentTarget.classList.add('dragover'); });
+            uploadArea.addEventListener('dragleave', e => e.currentTarget.classList.remove('dragover'));
+            uploadArea.addEventListener('drop', handleDrop);
+
+            document.querySelectorAll('textarea').forEach(ta => ta.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    askQuestion();
+                }
+            }));
+        }
+
+        function selectSubject(subject) {
+            currentSubject = subject;
+            document.querySelectorAll('.subject-card').forEach(card => card.classList.toggle('active', card.dataset.subject === subject));
+            document.getElementById('currentSubject').textContent = subject.charAt(0).toUpperCase() + subject.slice(1);
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            document.querySelectorAll('.input-content').forEach(c => c.classList.toggle('active', c.id === `${tab}-input`));
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) processImageFile(file);
+        }
+        
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            const file = event.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) processImageFile(file);
+        }
+
+        function processImageFile(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                uploadedImage = { data: e.target.result.split(',')[1], type: file.type };
+                document.getElementById('imagePreview').innerHTML = `
+                    <img src="${e.target.result}" alt="Uploaded image" class="uploaded-image">
+                    <button class="remove-image" onclick="removeImage(event)">×</button>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage(event) {
+            if(event) event.stopPropagation();
+            uploadedImage = null;
+            document.getElementById('imagePreview').innerHTML = `
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">Tap to upload an image</div>
+                <div style="font-size: 0.8rem; color: #999;">PNG, JPG, JPEG supported</div>
+            `;
+            document.getElementById('imageFile').value = '';
+        }
+
+        async function askQuestion() {
+            let question = '';
+            let hasImage = false;
+
+            if (currentTab === 'text') {
+                question = document.getElementById('question-text').value.trim();
+                if (!question) {
+                    showError('Please enter your question!');
+                    return;
+                }
+            } else if (currentTab === 'image') {
+                question = document.getElementById('question-image').value.trim();
+                hasImage = !!uploadedImage;
+                if (!hasImage && !question) {
+                     showError('Please upload an image or ask a question!');
+                     return;
+                }
+                if (!question && hasImage){
+                    question = "What is in this image?";
+                }
+            }
+
+            showLoading(true);
+            hideError();
+            document.getElementById('answerSection').style.display = 'none';
+
+            try {
+                const enhancedPrompt = createEnhancedPrompt(currentSubject, question);
+                const answer = await callGeminiAPI(enhancedPrompt, hasImage ? uploadedImage : null);
+                
+                showAnswer(answer);
+                addToHistory(question, answer, currentSubject, hasImage);
+
+                document.getElementById('question-text').value = '';
+                document.getElementById('question-image').value = '';
+                if(hasImage) removeImage();
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message || 'An unknown error occurred. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function createEnhancedPrompt(subject, question) {
+            const instructions = {
+                'hindi': 'You are a Hindi language expert. Answer in Hindi (Devanagari script).',
+                'mathematics': 'You are a mathematics expert. Provide step-by-step solutions.',
+                'general': 'You are a helpful and knowledgeable assistant.',
+            };
+            const instruction = instructions[subject] || `You are a ${subject} expert. Provide a detailed, educational answer.`;
+            return `${instruction}\n\nQuestion: ${question}`;
+        }
+
+        async function callGeminiAPI(prompt, imageData = null) {
+            const model = imageData ? 'gemini-1.5-flash' : 'gemini-1.5-flash';
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
+            
+            let parts = [{ text: prompt }];
+            if (imageData) {
+                parts.push({ inline_data: { mime_type: imageData.type, data: imageData.data } });
+            }
+
+            const requestBody = { contents: [{ parts }] };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.error('API Error:', data);
+                throw new Error(data.error?.message || 'Failed to fetch from API.');
+            }
+            
+            if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                return data.candidates[0].content.parts[0].text;
+            } else if (data.candidates?.[0]?.finishReason) {
+                 throw new Error(`Response stopped: ${data.candidates[0].finishReason}. Try a different prompt.`);
+            } else {
+                 throw new Error('Invalid response from API. The prompt may have been blocked.');
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.querySelector('.ask-button').disabled = show;
+            document.getElementById('button-text').textContent = show ? '⏳ Processing...' : '🚀 Get Answer';
+        }
+
+        function showAnswer(answer) {
+            const answerSection = document.getElementById('answerSection');
+            document.getElementById('answerContent').textContent = answer;
+            answerSection.style.display = 'block';
+            answerSection.classList.add('fade-in');
+            answerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function addToHistory(question, answer, subject, hasImage) {
+            const historyItem = { question, answer, subject, hasImage, timestamp: new Date().toLocaleString() };
+            questionHistory.unshift(historyItem);
+            if (questionHistory.length > 15) questionHistory.pop();
+            saveHistory();
+            displayHistory();
+            updateStats();
+        }
+
+        function displayHistory() {
+            const container = document.getElementById('historyContainer');
+            if (questionHistory.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No questions yet. Start learning!</p>';
+                return;
+            }
+            container.innerHTML = questionHistory.map((item, index) => `
+                <div class="history-item" onclick="loadFromHistory(${index})">
+                    <div class="history-question">${item.hasImage ? '📷' : '❓'} ${item.question}</div>
+                    <div class="history-answer">${item.answer}</div>
+                    <div class="history-meta">${item.subject.toUpperCase()} • ${item.timestamp}</div>
+                </div>
+            `).join('');
+        }
+        
+        function loadFromHistory(index) {
+            const item = questionHistory[index];
+            showAnswer(item.answer);
+            if (item.hasImage) {
+                 switchTab('image');
+                 document.getElementById('question-image').value = item.question;
+            } else {
+                 switchTab('text');
+                 document.getElementById('question-text').value = item.question;
+            }
+             selectSubject(item.subject);
+        }
+
+        function saveHistory() {
+            localStorage.setItem('questionAiHistory', JSON.stringify(questionHistory));
+        }
+
+        function loadHistory() {
+            const saved = localStorage.getItem('questionAiHistory');
+            if (saved) {
+                questionHistory = JSON.parse(saved);
+                displayHistory();
+            }
+        }
+
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all history?')) {
+                questionHistory = [];
+                saveHistory();
+                displayHistory();
+                updateStats();
+                document.getElementById('answerSection').style.display = 'none';
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalQuestions').textContent = questionHistory.length;
+        }
+    </script>
+</body>
+</html>
